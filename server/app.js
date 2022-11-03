@@ -1,4 +1,5 @@
 var express = require("express");
+var cors = require("cors");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var axios = require("axios");
@@ -47,7 +48,7 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-
+app.use(cors());
 
 async function getS3Object(bucketName,keyName){
   try{
@@ -110,8 +111,10 @@ async function getRedisKey(keyName){
 async function setRedisKey(keyName,content,ttl){
   try{
     const value = JSON.stringify({
-      source: "Redis Cache",
-      ...content,
+      source: "RedisCache",
+      id:content.id,
+      count:content.count.length,
+      countInfo:content.count
         })
   await redisClient.setEx(
       keyName,
@@ -252,7 +255,7 @@ app.post("/traffic", async (req, res) => {
   }
   catch(err){
     console.log(err)
-    res.status(500).send('Status: Service Not Available')
+    res.status(500).send(err)
   }
 })
 
