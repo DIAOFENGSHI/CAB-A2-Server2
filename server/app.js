@@ -22,8 +22,10 @@ const s3Client = new AWS.S3({ apiVersion: "2006-03-01" });
 const url = `rediss://master.traffic-aid.km2jzi.apse2.cache.amazonaws.com:6379`;
 const redisClient = redis.createClient({
     url,
-    password: '0bc4041c48a71d35b9389055'
+    password: process.env.redis_tls
 });
+
+
 
 // wait for Redis connection
 (async () => {
@@ -80,7 +82,7 @@ async function putS3Object(bucketName,keyName,date){
 async function fetchQLDTraffic(){
   const config = {
     method: "get",
-    url: "https://api.qldtraffic.qld.gov.au/v1/webcams?apikey=3e83add325cbb69ac4d8e5bf433d770b",
+    url: `https://api.qldtraffic.qld.gov.au/v1/webcams?apikey=${process.env.qldtraffic}`,
   };
   const response = await axios(config)
   return response
@@ -161,6 +163,7 @@ async function getPrediction(url){
 async function fetchQLDTrafficAPI(){
   // find the key - QLDtrafficAPI, if yes, fetch, check the validity
     var trafficInfo = await getS3Object(bucketName,key_QLDtrafficAPI)
+    console.log(trafficInfo)
     const validity = checkTimeStamp(trafficInfo)
     // no or invalid, fetch api, then add the timestamp
     if(!trafficInfo || !validity){
