@@ -8,6 +8,7 @@ const cocoSsd = require("@tensorflow-models/coco-ssd");
 const jpeg = require("jpeg-js");
 const redis = require("redis");
 const AWS = require("aws-sdk");
+require('dotenv').config()
 var app = express();
 const port = "8002";
 const bucketName = "n10840044-traffic-aid"
@@ -18,6 +19,10 @@ const s3Client = new AWS.S3({ apiVersion: "2006-03-01" });
 
 // ./redis-cli -h n10840044.km2jzi.ng.0001.apse2.cache.amazonaws.com -p 6379
 // ./redis-cli -h master.traffic-aid.km2jzi.apse2.cache.amazonaws.com --tls -a 0bc4041c48a71d35b9389055
+// export 
+
+
+
 // Redis setup
 const url = `rediss://master.traffic-aid.km2jzi.apse2.cache.amazonaws.com:6379`;
 const redisClient = redis.createClient({
@@ -154,6 +159,7 @@ async function getPrediction(url){
     }
     const input = imageToInput(pixels, NUMBER_OF_CHANNELS)
     const predictions = await model.detect(input)
+    tf.dispose(input);
     const precise = predictions.filter((predict)=>{
         return predict.class == "car" || predict.class == "truck"
     })
@@ -163,7 +169,6 @@ async function getPrediction(url){
 async function fetchQLDTrafficAPI(){
   // find the key - QLDtrafficAPI, if yes, fetch, check the validity
     var trafficInfo = await getS3Object(bucketName,key_QLDtrafficAPI)
-    console.log(trafficInfo)
     const validity = checkTimeStamp(trafficInfo)
     // no or invalid, fetch api, then add the timestamp
     if(!trafficInfo || !validity){
@@ -233,11 +238,13 @@ app.post("/traffic", async (req, res) => {
       const trafficInfo = await fetchQLDTrafficAPI()
       countInfo = await Promise.all(countInfo.map(async (location)=>{
       if(location.count == null){
+        //console.log(trafficInfo.info)
           const info = trafficInfo.info.filter((cam)=>{
             if(cam.id == location.id){
               return cam
             }
           })[0]
+          //console.log(info)
           const prediction = await getPrediction(info.url)
           location.count = prediction
           setRedisKey(location.id.toString(),location,60)
