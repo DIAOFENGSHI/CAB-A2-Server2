@@ -2,19 +2,20 @@ var express = require("express");
 var cors = require("cors");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-var app = express();
 require('dotenv').config()
-const { includesNullValue, addCount } = require("./Classes/TrafficAid");
-const { fetchQLDTrafficAPI } = require("./Classes/QLDTrafficAPI");
-const { createRedisClient, getRedisKey, setRedisKey } = require("./Classes/Redis");
-const { getS3Object, putS3Object } = require("./Classes/S3");
-const { getPrediction } = require("./Classes/TensorFlow");
 const AWS = require("aws-sdk");
 const port = "8002";
 const bucketName = "n10840044-traffic-aid"
 const key_TopTen = "TopTen"
 const s3Client = new AWS.S3({ apiVersion: "2006-03-01" });
 var redisClient = null;
+var app = express();
+
+const { includesNullValue, addCount } = require("./Classes/TrafficAid");
+const { fetchQLDTrafficAPI } = require("./Classes/QLDTrafficAPI");
+const { createRedisClient, getRedisKey, setRedisKey } = require("./Classes/Redis");
+const { getS3Object, putS3Object } = require("./Classes/S3");
+const { getPrediction } = require("./Classes/TensorFlow");
 
 (async () => {
   try {
@@ -23,7 +24,6 @@ var redisClient = null;
     console.log(err);
   }
 })();
-
 
 app.use(logger("dev"));
 app.use(express.json());
